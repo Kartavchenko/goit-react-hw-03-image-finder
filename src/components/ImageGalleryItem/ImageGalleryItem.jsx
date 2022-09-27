@@ -1,10 +1,9 @@
-export const ImageGalleryItem = hits => {
-  const photo = hits.map(({ id, webformatURL, tags }) => {
+export const ImageGalleryItem = ({ objectHits }) => {
+  return objectHits.map(({ id, webformatURL, largeImageURL, tags }) => {
     return (
       <li className="gallery-item" key={id}>
         <img src={webformatURL} alt={tags} />
       </li>
     );
   });
-  return photo;
 };

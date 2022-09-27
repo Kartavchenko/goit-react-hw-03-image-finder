@@ -1,6 +1,7 @@
 import { Component } from 'react';
 import { Searchbar } from './Searchbar/Searchbar';
-// import { ImageGallery } from './ImageGallery/ImageGallery';
+import { ImageGallery } from './ImageGallery/ImageGallery';
+import { LoadMore } from './Button/Button';
 import { serviceApi } from '../ServiceApi/Service';
 
 export class App extends Component {
@@ -16,15 +17,23 @@ export class App extends Component {
     this.fetchPhoto();
   }
 
-  // componentDidUpdate() {}
-
+  componentDidUpdate(prevProps, prevState) {
+    const { searchQuery, hits } = this.state;
+    if (prevState.hits === hits) {
+      this.fetchPhoto();
+    }
+    // if (prevProps.searchQuery !== searchQuery) {
+    //   this.fetchPhoto();
+    // }
+  }
+  // розібратися з пошуком і завантаженням нових сторінок
   fetchPhoto = async () => {
+    const { page, searchQuery, hits } = this.state;
     try {
-      const hits = await serviceApi(this.state.searchQuery);
+      const data = await serviceApi(searchQuery, page);
       this.setState({
-        hits,
+        hits: data,
       });
-      console.log(hits);
     } catch (error) {
       this.setState({ error });
     } finally {
@@ -32,17 +41,26 @@ export class App extends Component {
     }
   };
 
+  onLoadMore = () => {
+    const { page } = this.state;
+    // const data = await serviceApi(searchQuery, page);
+    this.setState({
+      // hits: [...hits, ...data],
+      page: page + 1,
+    });
+  };
+
   handleOnSearch = searchQuery => {
     this.setState({ searchQuery });
   };
 
   render() {
-    // console.log(this.fetchPhoto);
+    const { hits } = this.state;
     return (
       <div>
         <Searchbar handleOnSearch={this.handleOnSearch} />
-
-        {/* <ImageGallery joga={this.fetchPhoto()} /> */}
+        <ImageGallery objectHits={hits} />
+        <LoadMore onLoadMore={this.onLoadMore} />
       </div>
     );
   }
