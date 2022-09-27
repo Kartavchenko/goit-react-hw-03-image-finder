@@ -18,7 +18,7 @@ export class App extends Component {
   }
 
   componentDidUpdate(prevProps, prevState) {
-    const { searchQuery, hits } = this.state;
+    const { hits } = this.state;
     if (prevState.hits === hits) {
       this.fetchPhoto();
     }
@@ -28,7 +28,7 @@ export class App extends Component {
   }
   // розібратися з пошуком і завантаженням нових сторінок
   fetchPhoto = async () => {
-    const { page, searchQuery, hits } = this.state;
+    const { page, searchQuery } = this.state;
     try {
       const data = await serviceApi(searchQuery, page);
       this.setState({
