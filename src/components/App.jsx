@@ -16,20 +16,25 @@ export class App extends Component {
     modalContent: '',
   };
 
+  // componentDidMount() {
+  //   this.fetchPhoto();
+  // }
+
   componentDidUpdate(prevProps, prevState) {
-    const { hits, searchQuery, page } = this.state;
+    const { searchQuery, page } = this.state;
     if (prevState.searchQuery !== searchQuery) {
       this.fetchPhoto(searchQuery, page);
-      // this.onLoadMore();
     }
   }
 
   fetchPhoto = async () => {
-    const { page, searchQuery, hits } = this.state;
+    const { page, hits, searchQuery } = this.state;
     try {
       const data = await serviceApi(searchQuery, page);
+      this.onLoadMore();
       this.setState({
-        hits: data,
+        hits: [...hits, ...data],
+        // page: page + 1,
       });
     } catch (error) {
       this.setState({ error });
@@ -39,43 +44,45 @@ export class App extends Component {
   };
 
   onLoadMore = () => {
-    const { page, hits, searchQuery } = this.state;
-    // const data = await serviceApi(page);
+    const { page } = this.state;
+    // try {
+    //   const data = await serviceApi(searchQuery, page);
     this.setState({
-      hits,
       page: page + 1,
     });
+    // } catch (error) {
+    //   console.log(error);
+    // }
   };
 
   handleOnSearch = searchQuery => {
     this.setState({ searchQuery });
   };
 
-  openModal = modalContent => {
-    console.log('hi there');
-    this.setState = {
-      modalOpen: true,
-      modalContent: modalContent,
-    };
+  closeModal = ({ target, currentTarget }) => {
+    if (target === currentTarget) {
+      this.setState({
+        modalOpen: false,
+        modalContent: '',
+      });
+    }
   };
 
-  closeModal = () => {
+  handleModal = modalContent => {
     this.setState({
-      modalOpen: false,
-      modalContent: '',
+      modalOpen: true,
+      modalContent,
     });
   };
 
   render() {
     const { hits, modalOpen, modalContent } = this.state;
-    const { closeModal, openModal, handleOnSearch, onLoadMore } = this;
+    const { closeModal, handleOnSearch, handleModal, onLoadMore } = this;
     return (
       <div>
-        {modalOpen && (
-          <Modal objectHits={hits}>{<img src={modalContent} />}</Modal>
-        )}
+        {modalOpen && <Modal closeModal={closeModal}>{modalContent}</Modal>}
         <Searchbar handleOnSearch={handleOnSearch} />
-        <ImageGallery objectHits={hits} onClick={openModal} />
+        <ImageGallery objectHits={hits} handleModal={handleModal} />
         <LoadMore onLoadMore={onLoadMore} />
       </div>
     );
