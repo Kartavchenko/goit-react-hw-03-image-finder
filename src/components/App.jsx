@@ -2,6 +2,7 @@ import { Component } from 'react';
 import { Searchbar } from './Searchbar/Searchbar';
 import { ImageGallery } from './ImageGallery/ImageGallery';
 import { LoadMore } from './Button/Button';
+import { Modal } from 'components/Modal/Modal';
 import { serviceApi } from '../ServiceApi/Service';
 
 export class App extends Component {
@@ -11,24 +12,20 @@ export class App extends Component {
     page: 1,
     isLoading: false,
     error: null,
+    modalOpen: false,
+    modalContent: '',
   };
 
-  componentDidMount() {
-    this.fetchPhoto();
+  componentDidUpdate(prevProps, prevState) {
+    const { hits, searchQuery, page } = this.state;
+    if (prevState.searchQuery !== searchQuery) {
+      this.fetchPhoto(searchQuery, page);
+      // this.onLoadMore();
+    }
   }
 
-  componentDidUpdate(prevProps, prevState) {
-    const { hits } = this.state;
-    if (prevState.hits === hits) {
-      this.fetchPhoto();
-    }
-    // if (prevProps.searchQuery !== searchQuery) {
-    //   this.fetchPhoto();
-    // }
-  }
-  // розібратися з пошуком і завантаженням нових сторінок
   fetchPhoto = async () => {
-    const { page, searchQuery } = this.state;
+    const { page, searchQuery, hits } = this.state;
     try {
       const data = await serviceApi(searchQuery, page);
       this.setState({
@@ -42,10 +39,10 @@ export class App extends Component {
   };
 
   onLoadMore = () => {
-    const { page } = this.state;
-    // const data = await serviceApi(searchQuery, page);
+    const { page, hits, searchQuery } = this.state;
+    // const data = await serviceApi(page);
     this.setState({
-      // hits: [...hits, ...data],
+      hits,
       page: page + 1,
     });
   };
@@ -54,13 +51,32 @@ export class App extends Component {
     this.setState({ searchQuery });
   };
 
+  openModal = modalContent => {
+    console.log('hi there');
+    this.setState = {
+      modalOpen: true,
+      modalContent: modalContent,
+    };
+  };
+
+  closeModal = () => {
+    this.setState({
+      modalOpen: false,
+      modalContent: '',
+    });
+  };
+
   render() {
-    const { hits } = this.state;
+    const { hits, modalOpen, modalContent } = this.state;
+    const { closeModal, openModal, handleOnSearch, onLoadMore } = this;
     return (
       <div>
-        <Searchbar handleOnSearch={this.handleOnSearch} />
-        <ImageGallery objectHits={hits} />
-        <LoadMore onLoadMore={this.onLoadMore} />
+        {modalOpen && (
+          <Modal objectHits={hits}>{<img src={modalContent} />}</Modal>
+        )}
+        <Searchbar handleOnSearch={handleOnSearch} />
+        <ImageGallery objectHits={hits} onClick={openModal} />
+        <LoadMore onLoadMore={onLoadMore} />
       </div>
     );
   }
