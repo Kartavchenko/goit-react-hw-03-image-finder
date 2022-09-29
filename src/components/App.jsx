@@ -4,6 +4,8 @@ import { ImageGallery } from './ImageGallery/ImageGallery';
 import { LoadMore } from './Button/Button';
 import { Modal } from 'components/Modal/Modal';
 import { serviceApi } from '../ServiceApi/Service';
+import { Loader } from './Loader/Loader';
+import PropTypes from 'prop-types';
 
 export class App extends Component {
   state = {
@@ -16,25 +18,30 @@ export class App extends Component {
     modalContent: '',
   };
 
-  // componentDidMount() {
-  //   this.fetchPhoto();
-  // }
+  componentDidMount() {}
 
   componentDidUpdate(prevProps, prevState) {
-    const { searchQuery, page } = this.state;
+    const { searchQuery } = this.state;
     if (prevState.searchQuery !== searchQuery) {
-      this.fetchPhoto(searchQuery, page);
+      this.fetchPhoto();
+      this.setState({ isLoading: true });
     }
   }
+
+  componentWillUnmount() {}
 
   fetchPhoto = async () => {
     const { page, hits, searchQuery } = this.state;
     try {
-      const data = await serviceApi(searchQuery, page);
-      this.onLoadMore();
       this.setState({
-        hits: [...hits, ...data],
-        // page: page + 1,
+        isLoading: true,
+      });
+      const data = await serviceApi(searchQuery, page);
+      this.setState(({ page }) => {
+        return {
+          hits: [...hits, ...data],
+          page: page + 1,
+        };
       });
     } catch (error) {
       this.setState({ error });
@@ -43,32 +50,28 @@ export class App extends Component {
     }
   };
 
-  onLoadMore = () => {
-    const { page } = this.state;
-    // try {
-    //   const data = await serviceApi(searchQuery, page);
-    this.setState({
-      page: page + 1,
-    });
-    // } catch (error) {
-    //   console.log(error);
-    // }
-  };
-
   handleOnSearch = searchQuery => {
-    this.setState({ searchQuery });
+    if (searchQuery !== this.state.searchQuery) {
+      this.setState({ searchQuery, page: 1, hits: [] });
+    }
   };
 
-  closeModal = ({ target, currentTarget }) => {
-    if (target === currentTarget) {
-      this.setState({
-        modalOpen: false,
-        modalContent: '',
-      });
+  closeModal = e => {
+    window.removeEventListener('keydown', this.onEscKeyPress);
+    this.setState({
+      modalOpen: false,
+      modalContent: '',
+    });
+  };
+
+  onEscKeyPress = e => {
+    if (e.key === 'Escape') {
+      this.closeModal();
     }
   };
 
   handleModal = modalContent => {
+    window.addEventListener('keydown', this.onEscKeyPress);
     this.setState({
       modalOpen: true,
       modalContent,
@@ -76,15 +79,28 @@ export class App extends Component {
   };
 
   render() {
-    const { hits, modalOpen, modalContent } = this.state;
-    const { closeModal, handleOnSearch, handleModal, onLoadMore } = this;
+    const { hits, modalOpen, modalContent, isLoading } = this.state;
+    const { closeModal, handleOnSearch, handleModal, fetchPhoto } = this;
+    const cards = Boolean(hits.length);
     return (
       <div>
         {modalOpen && <Modal closeModal={closeModal}>{modalContent}</Modal>}
         <Searchbar handleOnSearch={handleOnSearch} />
         <ImageGallery objectHits={hits} handleModal={handleModal} />
-        <LoadMore onLoadMore={onLoadMore} />
+        {isLoading ? <Loader /> : cards && <LoadMore onLoadMore={fetchPhoto} />}
       </div>
     );
   }
 }
+
+App.propTypes = {
+  fetchPhoto: PropTypes.func,
+  handleOnSearch: PropTypes.func,
+  closeModal: PropTypes.func,
+  onEscKeyPress: PropTypes.func,
+  handleModal: PropTypes.func,
+  cards: PropTypes.bool,
+  Searchbar: PropTypes.element,
+  LoadMore: PropTypes.element,
+  Loader: PropTypes.element,
+};
