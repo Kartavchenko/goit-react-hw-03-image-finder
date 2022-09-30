@@ -18,8 +18,6 @@ export class App extends Component {
     modalContent: '',
   };
 
-  componentDidMount() {}
-
   componentDidUpdate(prevProps, prevState) {
     const { searchQuery } = this.state;
     if (prevState.searchQuery !== searchQuery) {
@@ -27,8 +25,6 @@ export class App extends Component {
       this.setState({ isLoading: true });
     }
   }
-
-  componentWillUnmount() {}
 
   fetchPhoto = async () => {
     const { page, hits, searchQuery } = this.state;

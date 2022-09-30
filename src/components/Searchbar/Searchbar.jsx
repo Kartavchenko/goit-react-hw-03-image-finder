@@ -6,6 +6,7 @@ export class Searchbar extends Component {
   state = {
     searchQuery: '',
   };
+
   handleChange = e => {
     const value = e.target.value;
     this.setState({
@@ -16,6 +17,9 @@ export class Searchbar extends Component {
   handleSubmit = e => {
     e.preventDefault();
     this.props.handleOnSearch(this.state.searchQuery);
+    this.setState({
+      searchQuery: '',
+    });
   };
 
   render() {
@@ -32,6 +36,7 @@ export class Searchbar extends Component {
             autoFocus
             placeholder="Search images and photos"
             onChange={this.handleChange}
+            value={this.state.searchQuery}
           />
         </form>
       </header>
@@ -42,4 +47,6 @@ export class Searchbar extends Component {
 Searchbar.propTypes = {
   button: PropTypes.string,
   span: PropTypes.string,
+  handleChange: PropTypes.func,
+  handleSubmit: PropTypes.func,
 };
