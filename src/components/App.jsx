@@ -13,6 +13,7 @@ export class App extends Component {
     searchQuery: '',
     page: 1,
     isLoading: false,
+    isShow: false,
     error: null,
     modalOpen: false,
     modalContent: '',
@@ -39,6 +40,11 @@ export class App extends Component {
           page: page + 1,
         };
       });
+      if (data.length >= 12) {
+        this.setState({ isShow: true });
+      } else {
+        this.setState({ isShow: false });
+      }
     } catch (error) {
       this.setState({ error });
     } finally {
@@ -53,21 +59,13 @@ export class App extends Component {
   };
 
   closeModal = e => {
-    window.removeEventListener('keydown', this.onEscKeyPress);
-    this.setState({
-      modalOpen: false,
+    this.setState(({ modalOpen }) => ({
+      modalOpen: !modalOpen,
       modalContent: '',
-    });
-  };
-
-  onEscKeyPress = e => {
-    if (e.key === 'Escape') {
-      this.closeModal();
-    }
+    }));
   };
 
   handleModal = modalContent => {
-    window.addEventListener('keydown', this.onEscKeyPress);
     this.setState({
       modalOpen: true,
       modalContent,
@@ -75,15 +73,22 @@ export class App extends Component {
   };
 
   render() {
-    const { hits, modalOpen, modalContent, isLoading } = this.state;
+    const { hits, modalOpen, modalContent, isLoading, isShow } = this.state;
     const { closeModal, handleOnSearch, handleModal, fetchPhoto } = this;
-    const cards = Boolean(hits.length);
     return (
       <div>
-        {modalOpen && <Modal closeModal={closeModal}>{modalContent}</Modal>}
+        {modalOpen && (
+          <Modal closeModal={closeModal}>
+            <img src={modalContent} alt="" />
+          </Modal>
+        )}
         <Searchbar handleOnSearch={handleOnSearch} />
         <ImageGallery objectHits={hits} handleModal={handleModal} />
-        {isLoading ? <Loader /> : cards && <LoadMore onLoadMore={fetchPhoto} />}
+        {isLoading ? (
+          <Loader />
+        ) : (
+          isShow && <LoadMore onLoadMore={fetchPhoto} />
+        )}
       </div>
     );
   }
